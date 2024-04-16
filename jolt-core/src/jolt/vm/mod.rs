@@ -529,12 +529,6 @@ pub trait Jolt<F: PrimeField, G: CurveGroup<ScalarField = F>, const C: usize, co
                     chunks_x[flat_chunk_index] = F::from_u64(x as u64).unwrap();
                     chunks_y[flat_chunk_index] = F::from_u64(y as u64).unwrap();
                 }
-            } else {
-                for chunk_index in 0..C {
-                    let flat_chunk_index = instruction_index + chunk_index * padded_trace_length;
-                    chunks_x[flat_chunk_index] = F::zero();
-                    chunks_y[flat_chunk_index] = F::zero();
-                }
             }
         }
 
