@@ -1,8 +1,6 @@
 #![allow(dead_code)]
 #![allow(clippy::legacy_numeric_constants)]
 
-use std::{fs::File, io::Read, path::PathBuf};
-
 use common::{self, constants::RAM_START_ADDRESS};
 use emulator::{
     cpu::{self, Xlen},
@@ -24,7 +22,7 @@ use crate::decode::decode_raw;
 
 #[tracing::instrument(skip_all)]
 pub fn trace(
-    elf: &PathBuf,
+    elf: &[u8],
     inputs: &[u8],
     input_size: u64,
     output_size: u64,
@@ -37,12 +35,7 @@ pub fn trace(
     jolt_device.inputs = inputs.to_vec();
     emulator.get_mut_cpu().get_mut_mmu().jolt_device = jolt_device;
 
-    let mut elf_file = File::open(elf).unwrap();
-
-    let mut elf_contents = Vec::new();
-    elf_file.read_to_end(&mut elf_contents).unwrap();
-
-    emulator.setup_program(elf_contents);
+    emulator.setup_program(elf.to_vec());
 
     let mut prev_pc = 0;
     loop {
@@ -70,13 +63,8 @@ pub fn trace(
 }
 
 #[tracing::instrument(skip_all)]
-pub fn decode(elf: &PathBuf) -> (Vec<ELFInstruction>, Vec<(u64, u8)>) {
-    let mut elf_file = File::open(elf).unwrap();
-    let mut elf_contents = Vec::new();
-    elf_file.read_to_end(&mut elf_contents).unwrap();
-
-    let obj = object::File::parse(&*elf_contents).unwrap();
-
+pub fn decode(elf: &[u8]) -> (Vec<ELFInstruction>, Vec<(u64, u8)>) {
+    let obj = object::File::parse(&*elf).unwrap();
     let sections = obj
         .sections()
         .filter(|s| s.address() >= RAM_START_ADDRESS)
